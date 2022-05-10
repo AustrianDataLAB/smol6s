@@ -6,7 +6,7 @@ services:
     ports:
         - "8080:8080"
     environment:
-        API_URL: http://localhost:5443/openapi/v2
+        API_URL: http://localhost:7080/openapi/v2
     depends_on:
       - nginx
   nginx:
@@ -17,9 +17,9 @@ services:
       - ./scripts:/scripts
       - k8s_certs:/k8s_certs
     ports:
-      - "5443:5443"
+      - "7080:7080"
     environment:
-      - AUTH_PORT=5443
+      - AUTH_PORT=7080
     depends_on:
       - dev
   dev:

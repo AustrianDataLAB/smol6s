@@ -1,5 +1,9 @@
 # smol6s || smol-ernete-s
 
+A lightweight k8s setup with swagger-ui and pre-authenticated nginx proxy.
+
+---
+
 Tutorial Setup for Teaching k8s to Advanced Users
 
 ## Getting started
@@ -39,4 +43,4 @@ kubectl proxy
 
 Otherwise you can connect to the k8s-api with an already authenticated nginx proxy:
 
-- nginx k8s-api proxy: [http://localhost:5443/](http://localhost:5443/)
+- nginx k8s-api proxy: [http://localhost:7080/](http://localhost:7080/)
