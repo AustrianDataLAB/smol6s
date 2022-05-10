@@ -1,0 +1,12 @@
+server {
+    listen     ${AUTH_PORT};
+
+    add_header "Access-Control-Allow-Origin"  *;
+
+    location / {
+        proxy_pass https://host.docker.internal:7443;
+        proxy_ssl_trusted_certificate /k8s_certs/client-cert-auth-ca.crt;
+        proxy_ssl_certificate /k8s_certs/client.crt;
+        proxy_ssl_certificate_key /k8s_certs/client.key;
+    }
+}

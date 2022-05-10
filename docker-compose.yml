@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+        - "8080:8080"
+    environment:
+        API_URL: http://localhost:5443/openapi/v2
+    depends_on:
+      - nginx
+  nginx:
+    image: nginx:stable-alpine
+    command: sh -c 'chmod +x -R /scripts && /scripts/wait-for-it.sh host.docker.internal:7443 /docker-entrypoint.sh nginx -g "daemon off;"'
+    volumes:
+      - ./templates:/etc/nginx/templates
+      - ./scripts:/scripts
+      - k8s_certs:/k8s_certs
+    ports:
+      - "5443:5443"
+    environment:
+      - AUTH_PORT=5443
+    depends_on:
+      - dev
+  dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Update 'VARIANT' to pick an LTS version of Node.js: 16, 14, 12.
+        # Append -bullseye or -buster to pin to an OS version.
+        # Use -bullseye variants on local arm64/Apple Silicon.
+        VARIANT: 1-bullseye
+    volumes:
+      - .:/workspace:cached
+      - k8s_certs:/k8s_certs
+      - k8s_bin:/workspace/bin
+      - go:/go
+      - source: ~/.kube
+        type: bind
+        target: /usr/local/share/kube-localhost
+        read_only: true
+    environment:
+      SYNC_LOCALHOST_KUBECONFIG: "true"
+      KUBECONFIG: "/k8s_certs/kubeconfig"
+      GO111MODULE: "on"
+      GOBIN: "/go/bin"
+      CGO_ENABLED: "0"
+    working_dir: /workspace
+    # Overrides default command so things don't shut down after the process ends.
+    command: bash -c "make && go run main.go"
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    networks:
+      - endpoints
+    #network_mode: "host"
+    ports:
+      - 7443:7443
+
+    # Uncomment the next line to use a non-root user for all processes.
+    user: vscode
+    cap_add:
+      - "SYS_PTRACE"
+    security_opt:
+      - seccomp:unconfined
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+networks:
+  endpoints: {}
+
+volumes:
+  go: {}
+  k8s_certs: {
+    driver: local,
+    driver_opts: {
+      type: tmpfs,
+      device: tmpfs,
+      o: "uid=1000,gid=1000"
+    }
+  }
+  k8s_bin: {
+    driver: local,
+    driver_opts: {
+      type: tmpfs,
+      device: tmpfs,
+      o: "uid=1000,gid=1000"
+    }
+  }
